@@ -9,29 +9,31 @@ const inquirer = require("inquirer");
 let request = require("request");
 let Twitter = require("twitter");
 let spotify = require("spotify");
-let client = new Twitter(keys.twitterKeys);
-
 
 inquirer.prompt([  
   {
     type: "input",
-    message: `Enter a command:  Options [ my-tweets, spotify-this-song '<song name here>',  movie-this '<movie name here>', do-what-it-says ]\n `,
+    message: `Enter a command:  Options [ my-(t)weets, (s)potify-this-song '<song name here>',  (m)ovie-this '<movie name here>', (d)o-what-it-says ]\n `,
     name: "cmd"
   }
-]).then(function(answers) {  
+]).then( function (answers) {
+processCommands(answers) });
+
+function processCommands(answers){	  
    //console.log(JSON.stringify(answers, null, 2));     
   
     let cmd = answers.cmd.toLowerCase();
     cmd = cmd.split(" ");
     switch (cmd[0]) {
         case ("t"):
-        case ("my-tweets"):    			          
-    			client.get('https://api.twitter.com/1.1/statuses/user_timeline.json?screen_name=miguel_m2017&count=20', function (error, tweets, response) {          
-    				if (error) {
-    					console.error(error);
-    				}
-				
-    				if( response.statusCode == 200 ) {    					
+        case ("my-tweets"):
+			let client = new Twitter(keys.twitterKeys);	
+			client.get('https://api.twitter.com/1.1/statuses/user_timeline.json?screen_name=miguel_m2017&count=20', function (error, tweets, response) {          
+				if (error) {
+					console.error(error);
+				}
+			
+				if( response.statusCode == 200 ) {    					
               for (let prop in tweets) {                
                 console.log(`On ${tweets[prop].created_at} miguel_m2017 tweeted:  ${tweets[prop].text} `);
               }              
@@ -45,11 +47,16 @@ inquirer.prompt([
         
         case ("m"):
         case ("movie-this"):
-          if (cmd.length > 1) {
-            let movie = cmd.slice(1);
+          let movie;
+		  if (cmd.length > 1) {
+            movie = cmd.slice(1);
             movie = movie.join(" ");
-            console.log("movie = " + movie);
-            request("http://www.omdbapi.com/?t=" + movie + "&y=&plot=short&r=json", function(error, response, body) {
+            //console.log("movie = " + movie);            
+          }
+		  else {
+			movie = "Mr. Nobody";
+		  }
+		  request("http://www.omdbapi.com/?t=" + movie + "&y=&plot=short&r=json", function(error, response, body) {
               if (error) {
                 console.error(error);
               }
@@ -57,12 +64,44 @@ inquirer.prompt([
               if (response.statusCode == 200) {                  
                 console.log(body);
               } 
-            });
-          }  
+            });			  
           break;
-
+		case ("s"):
+		case ("spotify-this-song"):
+		  let song;
+		  if (cmd.length > 1) {
+            song = cmd.slice(1);
+            song = song.join(" ");            
+          }
+		  else {
+			song = "The Sign";
+		  }
+		  //showSong(song);
+		  spotify.search({ type: 'track', query: song }, function(err, data) {
+			if ( err ) {
+				console.error(err);			
+			}			
+    		data = data.tracks.items[0];
+    		console.log(`\nSong: ${data.name}  \nArtists: ${data.artists[0].name}  \nURL: ${data.preview_url} \nAlbum: ${data.album.name}`);
+		  });		
+		break;
+		
+		case ("d"):
+		case ("do-what-it-says"):
+		  fs.readFile('random.txt', 'utf8', (err, data) => {
+			if ( err ) {
+			  console.error(err);			  	
+			}			
+			
+			data = data.split(",")
+			console.log(typeof data);
+			console.log(data[0]);
+			
+			processCommands({cmd: data[0]});			
+		  });
+		break;		
+		
         default:
           console.log("no match for cmd: " + answers.cmd);
     }  
-    
-});
+}

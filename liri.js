@@ -19,11 +19,19 @@ inquirer.prompt([
 ]).then( function (answers) {
 processCommands(answers) });
 
+
 function processCommands(answers){	  
-   //console.log(JSON.stringify(answers, null, 2));     
+   
   
     let cmd = answers.cmd.toLowerCase();
     cmd = cmd.split(" ");
+
+    // remove quotes if any
+    if ( cmd[0].charAt(0) == '"' ) {
+    	cmd[0] = cmd[0].substring(1,cmd[0].length);
+    	console.log(`cmd[0]= ${cmd[0]}`);
+ 	}
+
     switch (cmd[0]) {
         case ("t"):
         case ("my-tweets"):
@@ -50,8 +58,7 @@ function processCommands(answers){
           let movie;
 		  if (cmd.length > 1) {
             movie = cmd.slice(1);
-            movie = movie.join(" ");
-            //console.log("movie = " + movie);            
+            movie = movie.join(" ");            
           }
 		  else {
 			movie = "Mr. Nobody";
@@ -66,6 +73,7 @@ function processCommands(answers){
               } 
             });			  
           break;
+
 		case ("s"):
 		case ("spotify-this-song"):
 		  let song;
@@ -84,7 +92,7 @@ function processCommands(answers){
     		data = data.tracks.items[0];
     		console.log(`\nSong: ${data.name}  \nArtists: ${data.artists[0].name}  \nURL: ${data.preview_url} \nAlbum: ${data.album.name}`);
 		  });		
-		break;
+		  break;
 		
 		case ("d"):
 		case ("do-what-it-says"):
@@ -93,13 +101,13 @@ function processCommands(answers){
 			  console.error(err);			  	
 			}			
 			
-			data = data.split(",")
-			console.log(typeof data);
-			console.log(data[0]);
+			data = data.split(",");		
 			
-			processCommands({cmd: data[0]});			
+			data = data[0] + " " + data[1]
+
+			processCommands({cmd: data});
 		  });
-		break;		
+		  break;		
 		
         default:
           console.log("no match for cmd: " + answers.cmd);
